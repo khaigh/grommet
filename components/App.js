@@ -44,21 +44,24 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var CLASS_ROOT = _CSSClassnames2.default.APP;
 
-var supportedLocales = ['en-US', 'pt-BR'];
+/*
+let supportedLocales = ['en-US', 'pt-BR'];
 
 function localesSupported() {
   return global.Intl && supportedLocales.every(function (locale) {
-    return Intl.NumberFormat.supportedLocalesOf(locale)[0] === locale && Intl.DateTimeFormat.supportedLocalesOf(locale)[0] === locale;
+    return Intl.NumberFormat.supportedLocalesOf(locale)[0] === locale &&
+            Intl.DateTimeFormat.supportedLocalesOf(locale)[0] === locale;
   });
 }
 
-if (!localesSupported()) {
+if (! localesSupported()) {
   require('intl');
   require('intl/locale-data/jsonp/en-US.js');
   require('intl/locale-data/jsonp/pt-BR.js');
   Intl.NumberFormat = IntlPolyfill.NumberFormat;
   Intl.DateTimeFormat = IntlPolyfill.DateTimeFormat;
 }
+*/
 
 var App = function (_Component) {
   _inherits(App, _Component);

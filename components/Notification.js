@@ -24,8 +24,6 @@ var _classnames2 = require('classnames');
 
 var _classnames3 = _interopRequireDefault(_classnames2);
 
-var _reactIntl = require('react-intl');
-
 var _Intl = require('../utils/Intl');
 
 var _Intl2 = _interopRequireDefault(_Intl);
@@ -77,6 +75,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } // (C) Copyright 2014-2016 Hewlett Packard Enterprise Development LP
+
+//import { FormattedDate } from 'react-intl';
 
 // import Animate from './Animate';
 
@@ -225,9 +225,16 @@ var Notification = function (_Component) {
       if (timestamp) {
         var timestampFormatted = timestamp.toString();
         if (intl) {
-          timestampFormatted = _react2.default.createElement(_reactIntl.FormattedDate, { value: timestamp, weekday: 'long', day: 'numeric',
-            month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric',
-            second: 'numeric' });
+          timestampFormatted = intl.renderFormattedDate({
+            value: timestamp,
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric'
+          });
         }
 
         timestampNode = _react2.default.createElement(
