@@ -10,6 +10,7 @@ import CSSClassnames from '../utils/CSSClassnames';
 
 const CLASS_ROOT = CSSClassnames.APP;
 
+/*
 let supportedLocales = ['en-US', 'pt-BR'];
 
 function localesSupported() {
@@ -26,6 +27,7 @@ if (! localesSupported()) {
   Intl.NumberFormat = IntlPolyfill.NumberFormat;
   Intl.DateTimeFormat = IntlPolyfill.DateTimeFormat;
 }
+*/
 
 export default class App extends Component {
   constructor(props, context) {
