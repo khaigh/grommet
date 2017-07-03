@@ -7,10 +7,10 @@ import PropTypes from 'prop-types';
 // need for this component.
 
 import React from 'react';
-import { FormattedMessage } from 'react-intl';
+//import { FormattedMessage } from 'react-intl';
 
 const GrommetFormattedMessage = (props, context) => (
-  context.intl ? <FormattedMessage {...props} />
+  context.intl ? context.intl.renderFormattedMessage(props)
     : <span>
         {props.defaultMessage || props.id}
       </span>

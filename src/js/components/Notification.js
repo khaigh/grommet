@@ -4,7 +4,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { findDOMNode } from 'react-dom';
 import classnames from 'classnames';
-import { FormattedDate } from 'react-intl';
+//import { FormattedDate } from 'react-intl';
 import Intl from '../utils/Intl';
 import Box from './Box';
 import Value from './Value';
@@ -139,11 +139,16 @@ export default class Notification extends Component {
     if (timestamp) {
       let timestampFormatted = timestamp.toString();
       if (intl) {
-        timestampFormatted = (
-          <FormattedDate value={timestamp} weekday='long' day='numeric'
-            month='long' year='numeric' hour='numeric' minute='numeric'
-            second='numeric' />
-        );
+        timestampFormatted = intl.renderFormattedDate({
+          value: timestamp,
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric'
+        });
       }
 
       timestampNode = (
