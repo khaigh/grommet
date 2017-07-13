@@ -100,6 +100,7 @@ var DateTime = function (_Component) {
     _this._onOpen = _this._onOpen.bind(_this);
     _this._onForceClose = _this._onForceClose.bind(_this);
     _this._onControlClick = _this._onControlClick.bind(_this);
+    _this._onControlClose = _this._onControlClose.bind(_this);
     _this._onClose = _this._onClose.bind(_this);
     _this._onNext = _this._onNext.bind(_this);
     _this._onPrevious = _this._onPrevious.bind(_this);
@@ -210,6 +211,13 @@ var DateTime = function (_Component) {
         this.setState({ dropActive: false, cursor: -1 });
       } else {
         this.setState({ dropActive: true });
+      }
+    }
+  }, {
+    key: '_onControlClose',
+    value: function _onControlClose() {
+      if (this.state.dropActive) {
+        this.setState({ dropActive: false, cursor: -1 });
       }
     }
   }, {
@@ -343,7 +351,7 @@ var DateTime = function (_Component) {
       var current = this.state.current;
 
       return _react2.default.createElement(_DateTimeDrop2.default, { format: format, value: current,
-        step: step, onChange: this._notify });
+        step: step, onChange: this._notify, onClose: this._onControlClose });
     }
   }, {
     key: 'render',

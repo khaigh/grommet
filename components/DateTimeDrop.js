@@ -107,7 +107,6 @@ var DateTimeDrop = function (_Component) {
     _this._announceActiveCell = _this._announceActiveCell.bind(_this);
     _this._buildDateRows = _this._buildDateRows.bind(_this);
     _this._onDay = _this._onDay.bind(_this);
-    _this._onToday = _this._onToday.bind(_this);
     _this._onPrevious = _this._onPrevious.bind(_this);
     _this._onPreviousDay = _this._onPreviousDay.bind(_this);
     _this._onPreviousRow = _this._onPreviousRow.bind(_this);
@@ -308,30 +307,13 @@ var DateTimeDrop = function (_Component) {
       });
     }
   }, {
-    key: '_onToday',
-    value: function _onToday() {
-      var _props2 = this.props,
-          format = _props2.format,
-          onChange = _props2.onChange;
-      var timeOfDay = this.state.timeOfDay;
-      var intl = this.context.intl;
-
-      var today = (0, _moment2.default)().startOf('day').add(timeOfDay);
-      this.setState({ value: today }, function () {
-        var dateFormatted = today.format(format);
-        onChange(dateFormatted, true);
-        var selectedMessage = _Intl2.default.getMessage(intl, 'Selected');
-        (0, _Announcer.announce)(dateFormatted + ' ' + selectedMessage);
-      });
-    }
-  }, {
     key: '_onPrevious',
     value: function _onPrevious(scope) {
       var notify = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-      var _props3 = this.props,
-          format = _props3.format,
-          step = _props3.step,
-          onChange = _props3.onChange;
+      var _props2 = this.props,
+          format = _props2.format,
+          step = _props2.step,
+          onChange = _props2.onChange;
       var _state4 = this.state,
           stepScope = _state4.stepScope,
           timeOfDay = _state4.timeOfDay,
@@ -363,10 +345,10 @@ var DateTimeDrop = function (_Component) {
     key: '_onNext',
     value: function _onNext(scope) {
       var notify = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-      var _props4 = this.props,
-          format = _props4.format,
-          step = _props4.step,
-          onChange = _props4.onChange;
+      var _props3 = this.props,
+          format = _props3.format,
+          step = _props3.step,
+          onChange = _props3.onChange;
       var _state5 = this.state,
           stepScope = _state5.stepScope,
           timeOfDay = _state5.timeOfDay,
@@ -424,7 +406,7 @@ var DateTimeDrop = function (_Component) {
         var days = row.map(function (date, columnIndex) {
           var _classnames;
 
-          var classes = (0, _classnames4.default)(CLASS_ROOT + '__day', (_classnames = {}, _defineProperty(_classnames, CLASS_ROOT + '__day--active', date.isSame(propsValue, 'day')), _defineProperty(_classnames, CLASS_ROOT + '__day--hover', !date.isSame(value, 'day') && [rowIndex, columnIndex].toString() === activeCell.toString()), _defineProperty(_classnames, CLASS_ROOT + '__day--other-month', !date.isSame(value, 'month')), _classnames));
+          var classes = (0, _classnames4.default)(CLASS_ROOT + '__day', (_classnames = {}, _defineProperty(_classnames, CLASS_ROOT + '__day--today', date.isSame(new Date(), 'day')), _defineProperty(_classnames, CLASS_ROOT + '__day--active', date.isSame(propsValue, 'day')), _defineProperty(_classnames, CLASS_ROOT + '__day--hover', !date.isSame(value, 'day') && [rowIndex, columnIndex].toString() === activeCell.toString()), _defineProperty(_classnames, CLASS_ROOT + '__day--other-month', !date.isSame(value, 'month')), _classnames));
           var weekDay = WEEK_DAYS[columnIndex];
           var day = dateRows[rowIndex][columnIndex].date();
           return _react2.default.createElement(
@@ -513,7 +495,6 @@ var DateTimeDrop = function (_Component) {
 
       var previousMonthMessage = _Intl2.default.getMessage(intl, 'Previous Month');
       var nextMonthMessage = _Intl2.default.getMessage(intl, 'Next Month');
-      var todayMessage = _Intl2.default.getMessage(intl, 'Today');
 
       var grid = format.match(/D/) ? this._renderGrid() : _react2.default.createElement('span', { key: 'grid' });
 
@@ -532,12 +513,18 @@ var DateTimeDrop = function (_Component) {
         _react2.default.createElement(_Button2.default, { className: CLASS_ROOT + '__next', icon: _react2.default.createElement(_LinkNext2.default, null),
           a11yTitle: nextMonthMessage,
           onClick: this._onNext.bind(this, 'month', false) })
-      ), grid, _react2.default.createElement(
+      ), grid];
+    }
+  }, {
+    key: '_renderFooter',
+    value: function _renderFooter() {
+      var closeMessage = _Intl2.default.getMessage(intl, 'Close');
+      return _react2.default.createElement(
         _Box2.default,
         { key: 'today', alignSelf: 'center', pad: { vertical: 'small' } },
-        _react2.default.createElement(_Button2.default, { className: CLASS_ROOT + '__today', label: todayMessage,
-          onClick: this._onToday })
-      )];
+        _react2.default.createElement(_Button2.default, { className: CLASS_ROOT + '__today', label: closeMessage,
+          onClick: this.props.onClose })
+      );
     }
   }, {
     key: '_renderCounters',
@@ -604,7 +591,8 @@ var DateTimeDrop = function (_Component) {
 
 
       var calendar = void 0,
-          counters = void 0;
+          counters = void 0,
+          footer = void 0;
       if (DAY_REGEXP.test(format)) {
         calendar = this._renderCalendar();
       }
@@ -613,11 +601,14 @@ var DateTimeDrop = function (_Component) {
         counters = this._renderCounters(!DAY_REGEXP.test(format));
       }
 
+      footer = this._renderFooter();
+
       return _react2.default.createElement(
         _Box2.default,
         { className: CLASS_ROOT },
         calendar,
-        counters
+        counters,
+        footer
       );
     }
   }]);
@@ -636,6 +627,7 @@ DateTimeDrop.contextTypes = {
 DateTimeDrop.propTypes = {
   format: _propTypes2.default.string,
   onChange: _propTypes2.default.func.isRequired,
+  onClose: _propTypes2.default.func.isRequired,
   step: _propTypes2.default.number.isRequired,
   value: _propTypes2.default.object.isRequired
 };
