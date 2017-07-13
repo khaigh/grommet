@@ -373,6 +373,7 @@ export default class DateTimeDrop extends Component {
   }
 
   _renderFooter() {
+    const { intl } = this.context;
     const closeMessage = Intl.getMessage(intl, 'Close');
     return (
       <Box key='today' alignSelf='center' pad={{vertical: 'small'}}>
