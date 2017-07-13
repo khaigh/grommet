@@ -43,7 +43,6 @@ export default class DateTimeDrop extends Component {
     this._announceActiveCell = this._announceActiveCell.bind(this);
     this._buildDateRows = this._buildDateRows.bind(this);
     this._onDay = this._onDay.bind(this);
-    this._onToday = this._onToday.bind(this);
     this._onPrevious = this._onPrevious.bind(this);
     this._onPreviousDay = this._onPreviousDay.bind(this);
     this._onPreviousRow = this._onPreviousRow.bind(this);
@@ -212,19 +211,6 @@ export default class DateTimeDrop extends Component {
     });
   }
 
-  _onToday () {
-    const { format, onChange } = this.props;
-    const { timeOfDay } = this.state;
-    const { intl } = this.context;
-    const today = moment().startOf('day').add(timeOfDay);
-    this.setState({ value: today }, () => {
-      const dateFormatted = today.format(format);
-      onChange(dateFormatted, true);
-      const selectedMessage = Intl.getMessage(intl, 'Selected');
-      announce(`${dateFormatted} ${selectedMessage}`);
-    });
-  }
-
   _onPrevious (scope, notify=true) {
     const { format, step, onChange } = this.props;
     const { stepScope, timeOfDay, value } = this.state;
@@ -293,6 +279,7 @@ export default class DateTimeDrop extends Component {
       const days = row.map((date, columnIndex) => {
         const classes = classnames(
           `${CLASS_ROOT}__day`, {
+            [`${CLASS_ROOT}__day--today`]: date.isSame(new Date(), 'day'),
             [`${CLASS_ROOT}__day--active`]: date.isSame(propsValue, 'day'),
             [`${CLASS_ROOT}__day--hover`]: (
               !date.isSame(value, 'day') &&
@@ -363,7 +350,6 @@ export default class DateTimeDrop extends Component {
 
     const previousMonthMessage = Intl.getMessage(intl, 'Previous Month');
     const nextMonthMessage = Intl.getMessage(intl, 'Next Month');
-    const todayMessage = Intl.getMessage(intl, 'Today');
 
     const grid = (
       format.match(/D/) ? this._renderGrid() : <span key='grid' />
@@ -378,17 +364,22 @@ export default class DateTimeDrop extends Component {
         <Title className={`${CLASS_ROOT}__title`} responsive={false}>
           {value.format('MMMM YYYY')}
         </Title>
-        <Button className={`${CLASS_ROOT}__next`} icon={<LinkNextIcon
-          />}
+        <Button className={`${CLASS_ROOT}__next`} icon={<LinkNextIcon/>}
           a11yTitle={nextMonthMessage}
           onClick={this._onNext.bind(this, 'month', false)} />
       </Header>,
-      grid,
-      <Box key='today' alignSelf='center' pad={{vertical: 'small'}}>
-        <Button className={`${CLASS_ROOT}__today`} label={todayMessage}
-          onClick={this._onToday} />
-      </Box>
+      grid
     ];
+  }
+
+  _renderFooter() {
+    const closeMessage = Intl.getMessage(intl, 'Close');
+    return (
+      <Box key='today' alignSelf='center' pad={{vertical: 'small'}}>
+        <Button className={`${CLASS_ROOT}__today`} label={closeMessage}
+          onClick={this.props.onClose} />
+      </Box>
+    );
   }
 
   _renderCounters (includeDate) {
@@ -448,7 +439,7 @@ export default class DateTimeDrop extends Component {
   render () {
     const { format } = this.props;
 
-    let calendar, counters;
+    let calendar, counters, footer;
     if (DAY_REGEXP.test(format)) {
       calendar = this._renderCalendar();
     }
@@ -458,10 +449,13 @@ export default class DateTimeDrop extends Component {
       counters = this._renderCounters(! DAY_REGEXP.test(format));
     }
 
+    footer = this._renderFooter();
+
     return (
       <Box className={CLASS_ROOT}>
         {calendar}
         {counters}
+        {footer}
       </Box>
     );
   }
@@ -475,6 +469,7 @@ DateTimeDrop.contextTypes = {
 DateTimeDrop.propTypes = {
   format: PropTypes.string,
   onChange: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
   step: PropTypes.number.isRequired,
   value: PropTypes.object.isRequired
 };

@@ -39,6 +39,7 @@ export default class DateTime extends Component {
     this._onOpen = this._onOpen.bind(this);
     this._onForceClose = this._onForceClose.bind(this);
     this._onControlClick = this._onControlClick.bind(this);
+    this._onControlClose = this._onControlClose.bind(this);
     this._onClose = this._onClose.bind(this);
     this._onNext = this._onNext.bind(this);
     this._onPrevious = this._onPrevious.bind(this);
@@ -130,6 +131,12 @@ export default class DateTime extends Component {
       this.setState({ dropActive: false, cursor: -1 });
     } else {
       this.setState({ dropActive: true });
+    }
+  }
+
+  _onControlClose () {
+    if (this.state.dropActive) {
+      this.setState({ dropActive: false, cursor: -1 });
     }
   }
 
@@ -254,7 +261,7 @@ export default class DateTime extends Component {
     const { current } = this.state;
     return (
       <DateTimeDrop format={format} value={current}
-        step={step} onChange={this._notify} />
+        step={step} onChange={this._notify} onClose={this._onControlClose} />
     );
   }
 
