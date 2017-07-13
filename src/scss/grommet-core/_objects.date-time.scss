@@ -86,6 +86,12 @@
   color: $secondary-text-color;
 }
 
+.#{$grommet-namespace}date-time-drop__day--today {
+  background-color: nth($brand-accent-colors, 1);
+  color: $colored-text-color;
+  font-weight: 700;
+}
+
 .#{$grommet-namespace}date-time-drop__day--active {
   background-color: $brand-color;
   color: $colored-text-color;
