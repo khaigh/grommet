@@ -518,6 +518,8 @@ var DateTimeDrop = function (_Component) {
   }, {
     key: '_renderFooter',
     value: function _renderFooter() {
+      var intl = this.context.intl;
+
       var closeMessage = _Intl2.default.getMessage(intl, 'Close');
       return _react2.default.createElement(
         _Box2.default,
