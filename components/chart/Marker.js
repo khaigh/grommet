@@ -113,7 +113,7 @@ var Marker = function (_Component) {
       var classes = (0, _classnames3.default)(CLASS_ROOT, _defineProperty({}, COLOR_INDEX + '-' + colorIndex, colorIndex), className);
 
       var path = void 0;
-      if (count > 1 && index >= 1 && index < count || value >= min && value <= max) {
+      if (count > 1 && index >= 0 && index < count || value >= min && value <= max) {
         var commands = '';
 
         if (vertical) {
