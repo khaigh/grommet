@@ -60,6 +60,7 @@ exports.default = {
     // check in case we're already at the bottom and the indicator is visible
     (scrollState.scrollParents || []).forEach(function (scrollParent) {
       scrollParent.addEventListener("scroll", scrollState._onScroll);
+      scrollParent.addEventListener("touchmove", scrollState._onScroll);
       if (scrollParent === document || scrollParent === document.body) {
         var rect = indicatorElement.getBoundingClientRect();
         if (rect.top < window.innerHeight) {
@@ -73,6 +74,7 @@ exports.default = {
     (scrollState.scrollParents || []).forEach(function (scrollParent) {
       clearTimeout(scrollState.scrollTimer);
       scrollParent.removeEventListener("scroll", scrollState._onScroll);
+      scrollParent.removeEventListener("touchmove", scrollState._onScroll);
       window.removeEventListener("resize", scrollState._onResize);
     });
     scrollState.scrollParents = undefined;
