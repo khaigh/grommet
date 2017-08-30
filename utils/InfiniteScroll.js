@@ -1,10 +1,10 @@
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _DOM = require("./DOM");
+var _DOM = require('./DOM');
 
 var SCROLL_MORE_DELAY = 500; // when the user scrolls
 // (C) Copyright 2014-2016 Hewlett Packard Enterprise Development LP
@@ -15,7 +15,7 @@ function _evaluate(scrollState) {
   (scrollState.scrollParents || []).forEach(function (scrollParent) {
     // are we at the bottom?
     var bottom;
-    if (scrollParent === document) {
+    if (scrollParent === document || scrollParent.nodeName === 'HTML') {
       bottom = window.innerHeight;
     } else {
       bottom = scrollParent.getBoundingClientRect().bottom;
@@ -60,7 +60,6 @@ exports.default = {
     // check in case we're already at the bottom and the indicator is visible
     (scrollState.scrollParents || []).forEach(function (scrollParent) {
       scrollParent.addEventListener("scroll", scrollState._onScroll);
-      scrollParent.addEventListener("touchmove", scrollState._onScroll);
       if (scrollParent === document || scrollParent === document.body) {
         var rect = indicatorElement.getBoundingClientRect();
         if (rect.top < window.innerHeight) {
@@ -74,10 +73,9 @@ exports.default = {
     (scrollState.scrollParents || []).forEach(function (scrollParent) {
       clearTimeout(scrollState.scrollTimer);
       scrollParent.removeEventListener("scroll", scrollState._onScroll);
-      scrollParent.removeEventListener("touchmove", scrollState._onScroll);
       window.removeEventListener("resize", scrollState._onResize);
     });
     scrollState.scrollParents = undefined;
   }
 };
-module.exports = exports["default"];
+module.exports = exports['default'];
