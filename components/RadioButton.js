@@ -59,13 +59,13 @@ var RadioButton = function (_Component) {
 
       return _react2.default.createElement(
         'label',
-        { className: classes },
+        { htmlFor: props.id, className: classes },
         _react2.default.createElement('input', _extends({}, props, { className: CLASS_ROOT + '__input',
           type: 'radio' })),
         _react2.default.createElement('span', { className: CLASS_ROOT + '__control' }),
         _react2.default.createElement(
-          'label',
-          { htmlFor: props.id, className: CLASS_ROOT + '__label' },
+          'span',
+          { className: CLASS_ROOT + '__label' },
           label
         )
       );

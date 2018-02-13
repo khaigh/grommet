@@ -236,12 +236,12 @@ var MenuDrop = function (_Component) {
       var menuDropChildren = _react2.default.Children.map(children, function (child) {
         var result = child;
         if (child && isFunction(child.type) && child.type.prototype._renderMenuDrop) {
-          result = _react2.default.cloneElement(child, { inline: 'explode', direction: 'column' });
+          result = _react2.default.cloneElement(child, { inline: 'expanded', direction: 'column' });
         }
         return result;
       });
 
-      var contents = [_react2.default.cloneElement(control, { key: 'control', fill: true }), _react2.default.createElement(
+      var contents = [_react2.default.createElement(
         _Box2.default,
         _extends({}, restProps, { key: 'nav', ref: function ref(_ref) {
             return _this2.navContainerRef = _ref;
@@ -251,11 +251,18 @@ var MenuDrop = function (_Component) {
         menuDropChildren
       )];
 
+      // do not show the control if menu doesn't overlap with it when expanded
+      var showControl = ('top' === dropAlign.top || 'bottom' === dropAlign.bottom) && ('left' === dropAlign.left || 'right' === dropAlign.right);
+
+      if (showControl) {
+        contents.unshift(_react2.default.cloneElement(control, { key: 'control', fill: true }));
+      }
+
       if (dropAlign.bottom) {
         contents.reverse();
       }
 
-      var classes = (0, _classnames4.default)(CLASS_ROOT + '__drop', (_classnames = {}, _defineProperty(_classnames, CLASS_ROOT + '__drop--align-right', dropAlign.right), _defineProperty(_classnames, CLASS_ROOT + '__drop--' + size, size), _classnames));
+      var classes = (0, _classnames4.default)(CLASS_ROOT + '__drop', (_classnames = {}, _defineProperty(_classnames, this.props.className + '__drop', this.props.className), _defineProperty(_classnames, CLASS_ROOT + '__drop--align-right', dropAlign.right), _defineProperty(_classnames, CLASS_ROOT + '__drop--' + size, size), _classnames));
 
       return _react2.default.createElement(
         _Box2.default,
@@ -348,6 +355,8 @@ var Menu = function (_Component2) {
   }, {
     key: 'componentDidUpdate',
     value: function componentDidUpdate(prevProps, prevState) {
+      var _this4 = this;
+
       if (this.state.state !== prevState.state) {
         var activeKeyboardHandlers = {
           esc: this._onClose
@@ -365,8 +374,13 @@ var Menu = function (_Component2) {
             document.removeEventListener('click', this._checkOnClose);
             document.removeEventListener('touchstart', this._checkOnClose);
             if (this._drop) {
-              this._drop.remove();
-              this._drop = undefined;
+              // When Menu is used with Anchor/paths the Drop removes too quickly
+              // and react looks for a DOM element which is gone. Adding a
+              // slight delay resolves this issue.
+              setTimeout(function () {
+                _this4._drop.remove();
+                _this4._drop = undefined;
+              }, 5);
             }
             break;
           case 'focused':
@@ -374,15 +388,20 @@ var Menu = function (_Component2) {
             _KeyboardAccelerators2.default.startListeningToKeyboard(this, focusedKeyboardHandlers);
             break;
           case 'expanded':
-            _KeyboardAccelerators2.default.stopListeningToKeyboard(this, focusedKeyboardHandlers);
-            _KeyboardAccelerators2.default.startListeningToKeyboard(this, activeKeyboardHandlers);
-            document.addEventListener('click', this._checkOnClose);
-            document.addEventListener('touchstart', this._checkOnClose);
-            this._drop = new _Drop2.default((0, _reactDom.findDOMNode)(this._controlRef), this._renderMenuDrop(), {
-              align: this.props.dropAlign,
-              colorIndex: this.props.dropColorIndex,
-              focusControl: true
-            });
+            // only add the drop again if the instance is not defined
+            // see https://github.com/grommet/grommet/issues/1431
+            if (!this._drop) {
+              _KeyboardAccelerators2.default.stopListeningToKeyboard(this, focusedKeyboardHandlers);
+              _KeyboardAccelerators2.default.startListeningToKeyboard(this, activeKeyboardHandlers);
+              document.addEventListener('click', this._checkOnClose);
+              document.addEventListener('touchstart', this._checkOnClose);
+              this._drop = new _Drop2.default((0, _reactDom.findDOMNode)(this._controlRef), this._renderMenuDrop(), {
+                align: this.props.dropAlign,
+                colorIndex: this.props.dropColorIndex,
+                className: this.props.className && this.props.className + '__drop--container',
+                focusControl: true
+              });
+            }
             break;
         }
       } else if (this.state.state === 'expanded') {
@@ -405,7 +424,9 @@ var Menu = function (_Component2) {
   }, {
     key: '_onOpen',
     value: function _onOpen() {
-      this.setState({ state: 'expanded' });
+      if ((0, _reactDom.findDOMNode)(this._controlRef).contains(document.activeElement)) {
+        this.setState({ state: 'expanded' });
+      }
     }
   }, {
     key: '_onClose',
@@ -416,7 +437,8 @@ var Menu = function (_Component2) {
     key: '_checkOnClose',
     value: function _checkOnClose(event) {
       var drop = (0, _reactDom.findDOMNode)(this._menuDrop);
-      if (drop && !drop.contains(event.target)) {
+      var control = (0, _reactDom.findDOMNode)(this._controlRef);
+      if (drop && !drop.contains(event.target) && !control.contains(event.target)) {
         this._onClose();
       }
     }
@@ -449,7 +471,9 @@ var Menu = function (_Component2) {
   }, {
     key: '_onFocusControl',
     value: function _onFocusControl() {
-      this.setState({ state: 'focused' });
+      if (this.state.state !== 'focused') {
+        this.setState({ state: 'focused' });
+      }
     }
   }, {
     key: '_onBlurControl',
@@ -480,7 +504,7 @@ var Menu = function (_Component2) {
   }, {
     key: '_renderMenuDrop',
     value: function _renderMenuDrop() {
-      var _this4 = this;
+      var _this5 = this;
 
       var closeLabel = _Intl2.default.getMessage(this.context.intl, 'Close');
       var menuLabel = _Intl2.default.getMessage(this.context.intl, 'Menu');
@@ -496,11 +520,12 @@ var Menu = function (_Component2) {
       return _react2.default.createElement(
         MenuDrop,
         _extends({}, boxProps, this.context, {
+          className: this.props.className,
           dropAlign: this.props.dropAlign,
           size: this.props.size,
           onClick: onClick,
           control: control, ref: function ref(_ref3) {
-            return _this4._menuDrop = _ref3;
+            return _this5._menuDrop = _ref3;
           } }),
         this.props.children
       );
@@ -509,7 +534,7 @@ var Menu = function (_Component2) {
     key: 'render',
     value: function render() {
       var _classnames2,
-          _this5 = this;
+          _this6 = this;
 
       var _props3 = this.props,
           a11yTitle = _props3.a11yTitle,
@@ -534,7 +559,7 @@ var Menu = function (_Component2) {
 
       if (inline) {
         var menuLabel = void 0;
-        if ('explode' === inline) {
+        if ('expanded' === inline) {
           menuLabel = _react2.default.createElement(
             'div',
             { className: CLASS_ROOT + '__label' },
@@ -557,11 +582,15 @@ var Menu = function (_Component2) {
         return _react2.default.createElement(
           _Box2.default,
           _extends({ ref: function ref(_ref4) {
-              return _this5._controlRef = _ref4;
+              return _this6._controlRef = _ref4;
             } }, props, { className: classes }),
           _react2.default.createElement(_Button2.default, _extends({ plain: true, reverse: true,
             a11yTitle: menuTitle }, this._renderButtonProps(), {
-            onClick: this._onOpen,
+            onClick: function onClick() {
+              return _this6.setState({
+                state: _this6.state.state !== 'expanded' ? 'expanded' : 'collapsed'
+              });
+            },
             onFocus: this._onFocusControl, onBlur: this._onBlurControl }))
         );
       }

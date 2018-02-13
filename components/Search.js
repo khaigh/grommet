@@ -191,7 +191,9 @@ var Search = function (_Component) {
           responsive: false // so suggestion changes don't re-align
         });
 
-        this._inputRef.focus();
+        if (this._inputRef) {
+          this._inputRef.focus();
+        }
       } else if (this._drop) {
         this._drop.render(this._renderDropContent());
       }
@@ -242,7 +244,6 @@ var Search = function (_Component) {
           inline = _props3.inline,
           onSelect = _props3.onSelect,
           suggestions = _props3.suggestions,
-          activeSuggestionIndex = _props3.activeSuggestionIndex,
           onKeyDown = _props3.onKeyDown;
 
       var enter = 13;
@@ -261,11 +262,8 @@ var Search = function (_Component) {
         }
       }
       if (!dropActive && onSelect && event.keyCode === enter) {
-        var suggestion = suggestions[activeSuggestionIndex];
-
         onSelect({
-          target: this._inputRef || this._controlRef,
-          suggestion: suggestion
+          target: this._inputRef || this._controlRef
         }, false);
       }
       if (onKeyDown) {

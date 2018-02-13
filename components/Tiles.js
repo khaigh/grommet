@@ -125,7 +125,6 @@ var Tiles = function (_Component) {
           onMore = _props.onMore,
           selectable = _props.selectable;
 
-      this._setSelection();
       if (onMore) {
         this._scroll = _InfiniteScroll2.default.startListeningForScroll(this.moreRef, onMore);
       }
@@ -134,7 +133,7 @@ var Tiles = function (_Component) {
         document.addEventListener('wheel', this._onWheel, { passive: true });
         this._trackHorizontalScroll();
         // give browser a chance to stabilize
-        setTimeout(this._layout, 10);
+        this._layoutTimer = setTimeout(this._layout, 10);
       }
       if (selectable) {
         // only listen for navigation keys if the tile row can be selected
@@ -176,10 +175,9 @@ var Tiles = function (_Component) {
       if ('row' === direction) {
         this._trackHorizontalScroll();
         // give browser a chance to stabilize
-        setTimeout(this._layout, 10);
+        this._layoutTimer = setTimeout(this._layout, 10);
       }
       if (selectable) {
-        this._setSelection();
         // only listen for navigation keys if the list row can be selected
         this._keyboardHandlers = {
           left: this._onPreviousTile,
@@ -212,6 +210,9 @@ var Tiles = function (_Component) {
       }
       if (selectable) {
         _KeyboardAccelerators2.default.stopListeningToKeyboard(this, this._keyboardHandlers);
+      }
+      if (this._layoutTimer) {
+        clearTimeout(this._layoutTimer);
       }
     }
   }, {
@@ -333,8 +334,8 @@ var Tiles = function (_Component) {
     key: '_onScrollHorizontal',
     value: function _onScrollHorizontal() {
       // debounce
-      clearTimeout(this._scrollTimer);
-      this._scrollTimer = setTimeout(this._layout, 50);
+      clearTimeout(this._layoutTimer);
+      this._layoutTimer = setTimeout(this._layout, 50);
     }
   }, {
     key: '_onWheel',
@@ -396,8 +397,8 @@ var Tiles = function (_Component) {
     key: '_onResize',
     value: function _onResize() {
       // debounce
-      clearTimeout(this._resizeTimer);
-      this._resizeTimer = setTimeout(this._layout, 50);
+      clearTimeout(this._layoutTimer);
+      this._layoutTimer = setTimeout(this._layout, 50);
     }
   }, {
     key: '_trackHorizontalScroll',
@@ -409,16 +410,6 @@ var Tiles = function (_Component) {
         tiles.addEventListener('scroll', this._onScrollHorizontal);
         this._tracking = true;
       }
-    }
-  }, {
-    key: '_setSelection',
-    value: function _setSelection() {
-      _Selection2.default.setClassFromIndexes({
-        containerElement: (0, _reactDom.findDOMNode)(this.tilesRef),
-        childSelector: '.' + TILE,
-        selectedClass: SELECTED_CLASS,
-        selectedIndexes: this.state.selected
-      });
     }
   }, {
     key: '_onClick',
@@ -437,7 +428,7 @@ var Tiles = function (_Component) {
       });
       // only set the selected state and classes if the caller isn't managing it.
       if (selected === undefined) {
-        this.setState({ selected: selection }, this._setSelection);
+        this.setState({ selected: selection });
       }
 
       if (onSelect) {
@@ -446,15 +437,22 @@ var Tiles = function (_Component) {
     }
   }, {
     key: '_renderChild',
-    value: function _renderChild(element) {
+    value: function _renderChild(element, elementIndex) {
       var flush = this.props.flush;
+      var selectedArray = this.state.selected;
 
+      var selected = element.props.selected;
+
+      if (selectedArray && selectedArray.indexOf(elementIndex) > -1) {
+        selected = true;
+      }
 
       if (element) {
         // only clone tile children
-        if (element.type && element.type.displayName === 'Tile') {
+        if (element.type && element.type._tile) {
           var elementClone = _react2.default.cloneElement(element, {
-            hoverBorder: !flush
+            hoverBorder: !flush,
+            selected: selected
           });
 
           return elementClone;
@@ -511,8 +509,10 @@ var Tiles = function (_Component) {
         );
       }
 
-      var tileContents = _react.Children.map(children, function (element) {
-        return _this4._renderChild(element);
+      var tileContents = _react.Children.toArray(children).filter(function (child) {
+        return child;
+      }).map(function (element, index) {
+        return _this4._renderChild(element, index);
       });
 
       var selectableProps = void 0;

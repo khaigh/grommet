@@ -69,6 +69,7 @@ var LayerContents = function (_Component) {
 
     var _this = _possibleConstructorReturn(this, (LayerContents.__proto__ || Object.getPrototypeOf(LayerContents)).call(this, props, context));
 
+    _this._onClickOverlay = _this._onClickOverlay.bind(_this);
     _this._processTab = _this._processTab.bind(_this);
 
     _this.state = {
@@ -97,7 +98,8 @@ var LayerContents = function (_Component) {
     value: function componentDidMount() {
       var _props = this.props,
           hidden = _props.hidden,
-          onClose = _props.onClose;
+          onClose = _props.onClose,
+          overlayClose = _props.overlayClose;
 
 
       if (!hidden) {
@@ -112,6 +114,11 @@ var LayerContents = function (_Component) {
         this._keyboardHandlers.esc = onClose;
       }
       _KeyboardAccelerators2.default.startListeningToKeyboard(this, this._keyboardHandlers);
+
+      if (onClose && overlayClose) {
+        var layerParent = this.containerRef.parentNode;
+        layerParent.addEventListener('click', this._onClickOverlay);
+      }
     }
   }, {
     key: 'componentDidUpdate',
@@ -125,11 +132,25 @@ var LayerContents = function (_Component) {
   }, {
     key: 'componentWillUnmount',
     value: function componentWillUnmount() {
+      var _props2 = this.props,
+          onClose = _props2.onClose,
+          overlayClose = _props2.overlayClose;
+
       _KeyboardAccelerators2.default.stopListeningToKeyboard(this, this._keyboardHandlers);
+
+      if (onClose && overlayClose) {
+        var layerParent = this.containerRef.parentNode;
+        layerParent.removeEventListener('click', this._onClickOverlay);
+      }
     }
   }, {
     key: '_processTab',
     value: function _processTab(event) {
+      var hidden = this.props.hidden;
+
+      if (hidden) {
+        return;
+      }
       var items = this.containerRef.getElementsByTagName('*');
       items = (0, _DOM.filterByFocusable)(items);
 
@@ -148,15 +169,30 @@ var LayerContents = function (_Component) {
       }
     }
   }, {
+    key: '_onClickOverlay',
+    value: function _onClickOverlay(event) {
+      var dropActive = this.state.dropActive;
+
+      if (!dropActive) {
+        var onClose = this.props.onClose;
+
+        var layerContents = this.containerRef;
+
+        if (layerContents && !layerContents.contains(event.target)) {
+          onClose();
+        }
+      }
+    }
+  }, {
     key: 'render',
     value: function render() {
       var _this3 = this;
 
-      var _props2 = this.props,
-          a11yTitle = _props2.a11yTitle,
-          children = _props2.children,
-          closer = _props2.closer,
-          onClose = _props2.onClose;
+      var _props3 = this.props,
+          a11yTitle = _props3.a11yTitle,
+          children = _props3.children,
+          closer = _props3.closer,
+          onClose = _props3.onClose;
       var intl = this.context.intl;
 
 
@@ -205,6 +241,7 @@ LayerContents.propTypes = {
   history: _propTypes2.default.object,
   intl: _propTypes2.default.object,
   onClose: _propTypes2.default.func,
+  overlayClose: _propTypes2.default.bool,
   router: _propTypes2.default.any,
   store: _propTypes2.default.any
 };
@@ -252,7 +289,9 @@ var Layer = function (_Component2) {
     value: function componentWillUnmount() {
       var _this5 = this;
 
-      if (this._originalFocusedElement) {
+      var hidden = this.props.hidden;
+
+      if (this._originalFocusedElement && !hidden) {
         if (this._originalFocusedElement.focus) {
           // wait for the fixed positioning to come back to normal
           // see layer styling for reference
@@ -274,13 +313,13 @@ var Layer = function (_Component2) {
     value: function _classesFromProps() {
       var _classnames;
 
-      var _props3 = this.props,
-          align = _props3.align,
-          className = _props3.className,
-          closer = _props3.closer,
-          flush = _props3.flush,
-          hidden = _props3.hidden,
-          peek = _props3.peek;
+      var _props4 = this.props,
+          align = _props4.align,
+          className = _props4.className,
+          closer = _props4.closer,
+          flush = _props4.flush,
+          hidden = _props4.hidden,
+          peek = _props4.peek;
 
 
       return (0, _classnames3.default)('grommet', CLASS_ROOT, (_classnames = {}, _defineProperty(_classnames, CLASS_ROOT + '--align-' + this.props.align, align), _defineProperty(_classnames, CLASS_ROOT + '--closeable', closer), _defineProperty(_classnames, CLASS_ROOT + '--flush', flush), _defineProperty(_classnames, CLASS_ROOT + '--hidden', hidden), _defineProperty(_classnames, CLASS_ROOT + '--peek', peek), _classnames), className);
@@ -313,28 +352,30 @@ var Layer = function (_Component2) {
     value: function _handleAriaHidden(hideOverlay) {
       var _this6 = this;
 
-      var ariaHidden = hideOverlay || false;
-      var grommetApps = document.querySelectorAll('.' + APP);
-      var visibleLayers = document.querySelectorAll('.' + CLASS_ROOT + ':not(.' + CLASS_ROOT + '--hidden)');
+      setTimeout(function () {
+        var ariaHidden = hideOverlay || false;
+        var grommetApps = document.querySelectorAll('.' + APP);
+        var visibleLayers = document.querySelectorAll('.' + CLASS_ROOT + ':not(.' + CLASS_ROOT + '--hidden)');
 
-      if (grommetApps) {
-        Array.prototype.slice.call(grommetApps).forEach(function (grommetApp) {
-          if (ariaHidden && visibleLayers.length === 0) {
-            // make sure to only show grommet apps if there is no other layer
-            grommetApp.setAttribute('aria-hidden', false);
-            grommetApp.classList.remove(APP + '--hidden');
-            // scroll body content to the original position
-            grommetApp.style.top = '-' + _this6._originalScrollPosition.top + 'px';
-            grommetApp.style.left = '-' + _this6._originalScrollPosition.left + 'px';
-          } else {
-            grommetApp.setAttribute('aria-hidden', true);
-            grommetApp.classList.add(APP + '--hidden');
-            // this must be null to work
-            grommetApp.style.top = null;
-            grommetApp.style.left = null;
-          }
-        }, this);
-      }
+        if (grommetApps) {
+          Array.prototype.slice.call(grommetApps).forEach(function (grommetApp) {
+            if (ariaHidden && visibleLayers.length === 0) {
+              // make sure to only show grommet apps if there is no other layer
+              grommetApp.setAttribute('aria-hidden', false);
+              grommetApp.classList.remove(APP + '--hidden');
+              // scroll body content to the original position
+              grommetApp.style.top = '-' + _this6._originalScrollPosition.top + 'px';
+              grommetApp.style.left = '-' + _this6._originalScrollPosition.left + 'px';
+            } else {
+              grommetApp.setAttribute('aria-hidden', true);
+              grommetApp.classList.add(APP + '--hidden');
+              // this must be null to work
+              grommetApp.style.top = null;
+              grommetApp.style.left = null;
+            }
+          }, _this6);
+        }
+      }, 0);
     }
   }, {
     key: '_renderLayer',
@@ -362,14 +403,16 @@ var Layer = function (_Component2) {
   }, {
     key: '_removeLayer',
     value: function _removeLayer() {
-      this._element.removeEventListener('animationend', this._onAnimationEnd);
+      if (this._element) {
+        this._element.removeEventListener('animationend', this._onAnimationEnd);
 
-      _reactDom2.default.unmountComponentAtNode(this._element);
-      this._element.parentNode.removeChild(this._element);
-      this._element = undefined;
+        _reactDom2.default.unmountComponentAtNode(this._element);
+        this._element.parentNode.removeChild(this._element);
+        this._element = undefined;
 
-      // make sure to handle aria attributes after the layer is removed
-      this._handleAriaHidden(true);
+        // make sure to handle aria attributes after the layer is removed
+        this._handleAriaHidden(true);
+      }
     }
   }, {
     key: 'render',
@@ -390,6 +433,7 @@ Layer.propTypes = {
   closer: _propTypes2.default.oneOfType([_propTypes2.default.node, _propTypes2.default.bool]),
   flush: _propTypes2.default.bool,
   hidden: _propTypes2.default.bool,
+  overlayClose: _propTypes2.default.bool,
   peek: _propTypes2.default.bool,
   onClose: _propTypes2.default.func
 };

@@ -40,8 +40,6 @@ var _Drop = require('../utils/Drop');
 
 var _Drop2 = _interopRequireDefault(_Drop);
 
-var _DOM = require('../utils/DOM');
-
 var _Button = require('./Button');
 
 var _Button2 = _interopRequireDefault(_Button);
@@ -80,7 +78,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var CLASS_ROOT = _CSSClassnames2.default.SELECT;
 var INPUT = _CSSClassnames2.default.INPUT;
-var FORM_FIELD = _CSSClassnames2.default.FORM_FIELD;
 
 var Select = function (_Component) {
   _inherits(Select, _Component);
@@ -164,7 +161,7 @@ var Select = function (_Component) {
 
         if (!inline) {
           // If this is inside a FormField, place the drop in reference to it.
-          var control = (0, _DOM.findAncestor)(this.componentRef, FORM_FIELD) || this.componentRef;
+          var control = this.valueRef || this.inputRef;
           this._drop = new _Drop2.default(control, this._renderOptions(CLASS_ROOT + '__drop'), {
             align: { top: 'bottom', left: 'left' },
             context: this.context,
@@ -447,13 +444,16 @@ var Select = function (_Component) {
       var _this4 = this;
 
       var restProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var intl = this.context.intl;
       var _props4 = this.props,
           id = _props4.id,
           inline = _props4.inline,
           multiple = _props4.multiple,
           options = _props4.options,
           onSearch = _props4.onSearch,
-          value = _props4.value;
+          value = _props4.value,
+          _props4$searchPlaceHo = _props4.searchPlaceHolder,
+          searchPlaceHolder = _props4$searchPlaceHo === undefined ? _Intl2.default.getMessage(intl, 'Search') : _props4$searchPlaceHo;
       var _state2 = this.state,
           activeOptionIndex = _state2.activeOptionIndex,
           searchText = _state2.searchText;
@@ -466,7 +466,7 @@ var Select = function (_Component) {
             return _this4._searchRef = _ref;
           },
           inline: true, fill: true, responsive: false, pad: 'medium',
-          placeHolder: 'Search', value: searchText,
+          placeHolder: searchPlaceHolder, value: searchText,
           onDOMChange: this._onSearchChange,
           onKeyDown: this._onInputKeyDown });
       }
@@ -477,9 +477,9 @@ var Select = function (_Component) {
           var _classnames;
 
           var selected = _this4._optionSelected(option, value);
-          var classes = (0, _classnames4.default)((_classnames = {}, _defineProperty(_classnames, CLASS_ROOT + '__option', true), _defineProperty(_classnames, CLASS_ROOT + '__option--selected', selected), _defineProperty(_classnames, CLASS_ROOT + '__option--active', index === activeOptionIndex), _classnames));
-
           var content = _this4._renderLabel(option);
+          var classes = (0, _classnames4.default)((_classnames = {}, _defineProperty(_classnames, CLASS_ROOT + '__option', true), _defineProperty(_classnames, CLASS_ROOT + '__option--element', _react2.default.isValidElement(content)), _defineProperty(_classnames, CLASS_ROOT + '__option--selected', selected), _defineProperty(_classnames, CLASS_ROOT + '__option--active', index === activeOptionIndex), _classnames));
+
           if (option && option.icon) {
             content = _react2.default.createElement(
               'span',
@@ -492,12 +492,20 @@ var Select = function (_Component) {
 
           var itemOnClick = void 0;
           if (inline) {
-            var itemId = id + '-' + (option ? option.value || option : index);
+            var itemId = '' + (option ? option.value || option : index);
             var Type = multiple ? _CheckBox2.default : _RadioButton2.default;
-            content = _react2.default.createElement(Type, { key: itemId, id: itemId, label: content, checked: selected,
-              onChange: _this4._onClickOption.bind(_this4, option) });
+            content = _react2.default.createElement(Type, {
+              key: itemId,
+              id: id ? id + '-' + itemId : undefined,
+              label: content,
+              checked: selected,
+              onChange: _this4._onClickOption.bind(_this4, option)
+            });
           } else {
-            itemOnClick = _this4._onClickOption.bind(_this4, option);
+            itemOnClick = function itemOnClick(e) {
+              e.stopPropagation();
+              _this4._onClickOption.bind(_this4, option)();
+            };
           }
 
           return _react2.default.createElement(
@@ -544,18 +552,27 @@ var Select = function (_Component) {
       if (inline) {
         return this._renderOptions(classes, restProps);
       } else {
+        var renderedValue = this._renderValue(value);
+        var shouldRenderElement = _react2.default.isValidElement(renderedValue);
+
         return _react2.default.createElement(
           'div',
-          { ref: function ref(_ref3) {
-              return _this5.componentRef = _ref3;
-            }, className: classes,
-            onClick: this._onAddDrop },
-          _react2.default.createElement('input', _extends({}, restProps, { ref: function ref(_ref2) {
-              return _this5.inputRef = _ref2;
+          { className: classes, onClick: this._onAddDrop },
+          shouldRenderElement ? _react2.default.createElement(
+            'div',
+            { ref: function ref(_ref2) {
+                return _this5.valueRef = _ref2;
+              },
+              className: CLASS_ROOT + '__value' },
+            renderedValue
+          ) : null,
+          _react2.default.createElement('input', _extends({}, restProps, { ref: function ref(_ref3) {
+              return _this5.inputRef = _ref3;
             },
+            type: shouldRenderElement ? 'hidden' : 'text',
             className: INPUT + ' ' + CLASS_ROOT + '__input',
             placeholder: placeHolder, readOnly: true,
-            value: this._renderValue(value) || '' })),
+            value: !shouldRenderElement && renderedValue || '' })),
           _react2.default.createElement(_Button2.default, { className: CLASS_ROOT + '__control',
             a11yTitle: _Intl2.default.getMessage(intl, 'Select Icon'),
             icon: _react2.default.createElement(_CaretDown2.default, null),
@@ -583,6 +600,7 @@ Select.propTypes = {
   onSearch: _propTypes2.default.func,
   onChange: _propTypes2.default.func, // (value(s))
   placeHolder: _propTypes2.default.string,
+  searchPlaceHolder: _propTypes2.default.string,
   options: _propTypes2.default.arrayOf(valueType).isRequired,
   value: _propTypes2.default.oneOfType([valueType, _propTypes2.default.arrayOf(valueType)])
 };

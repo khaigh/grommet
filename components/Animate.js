@@ -238,48 +238,71 @@ var Animate = function (_Component2) {
     value: function _listenForScroll() {
       var _this3 = this;
 
-      this._scrollParents = (0, _DOM.findScrollParents)(this);
-      this._scrollParents.forEach(function (scrollParent) {
-        scrollParent.addEventListener('scroll', _this3._checkScroll);
-      });
+      // add a timeout so that the findScrollParents function
+      // get the right container sizes
+      setTimeout(function () {
+        var scrollParents = (0, _DOM.findScrollParents)((0, _reactDom.findDOMNode)(_this3.animateRef));
+        if (scrollParents.indexOf(document) === -1) {
+          document.addEventListener('scroll', _this3._checkScroll);
+        }
+        scrollParents.forEach(function (scrollParent) {
+          scrollParent.addEventListener('scroll', _this3._checkScroll);
+        }, _this3);
+      }, 0);
     }
   }, {
     key: '_unlistenForScroll',
     value: function _unlistenForScroll() {
       var _this4 = this;
 
-      this._scrollParents.forEach(function (scrollParent) {
+      var scrollParents = (0, _DOM.findScrollParents)((0, _reactDom.findDOMNode)(this.animateRef));
+      if (scrollParents.indexOf(document) === -1) {
+        document.removeEventListener('scroll', this._checkScroll);
+      }
+      scrollParents.forEach(function (scrollParent) {
         scrollParent.removeEventListener('scroll', _this4._checkScroll);
-      });
-      this._scrollParents = undefined;
+      }, this);
     }
   }, {
     key: '_checkScroll',
     value: function _checkScroll() {
-      var group = (0, _reactDom.findDOMNode)(this);
+      var _props = this.props,
+          onAppear = _props.onAppear,
+          onLeave = _props.onLeave;
+
+      var group = (0, _reactDom.findDOMNode)(this.animateRef);
       var rect = group.getBoundingClientRect();
+
       if (rect.top < window.innerHeight) {
-        if (!this.state.visible) {
-          this.setState({ visible: true });
-        }
+        this.setState({ visible: true }, function () {
+          if (onAppear) {
+            onAppear();
+          }
+        });
       } else {
-        if (this.state.visible) {
-          this.setState({ visible: false });
-        }
+        this.setState({ visible: false }, function () {
+          if (onLeave) {
+            onLeave();
+          }
+        });
       }
     }
   }, {
     key: 'render',
     value: function render() {
-      var _props = this.props,
-          enter = _props.enter,
-          leave = _props.leave,
-          className = _props.className,
-          children = _props.children,
-          component = _props.component,
-          keep = _props.keep,
-          props = _objectWithoutProperties(_props, ['enter', 'leave', 'className', 'children', 'component', 'keep']);
+      var _this5 = this;
 
+      var _props2 = this.props,
+          enter = _props2.enter,
+          leave = _props2.leave,
+          className = _props2.className,
+          children = _props2.children,
+          component = _props2.component,
+          keep = _props2.keep,
+          props = _objectWithoutProperties(_props2, ['enter', 'leave', 'className', 'children', 'component', 'keep']);
+
+      delete props.onAppear;
+      delete props.onLeave;
       delete props.visible;
       var visible = this.state.visible;
 
@@ -300,7 +323,13 @@ var Animate = function (_Component2) {
 
       return _react2.default.createElement(
         _reactTransitionGroup.TransitionGroup,
-        _extends({}, props, { className: classes, component: component }),
+        _extends({}, props, {
+          className: classes,
+          component: component,
+          ref: function ref(_ref3) {
+            return _this5.animateRef = _ref3;
+          }
+        }),
         animateChildren
       );
     }
@@ -328,6 +357,8 @@ Animate.propTypes = {
     duration: _propTypes2.default.number,
     delay: _propTypes2.default.number
   }),
+  onAppear: _propTypes2.default.func,
+  onLeave: _propTypes2.default.func,
   visible: _propTypes2.default.oneOfType([_propTypes2.default.oneOf(['scroll']), _propTypes2.default.bool])
 };
 

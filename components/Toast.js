@@ -46,6 +46,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -85,7 +87,7 @@ var ToastContents = function (_Component) {
     key: 'componentDidMount',
     value: function componentDidMount() {
       (0, _Announcer.announce)(this._contentsRef.innerText);
-      this._timer = setTimeout(this._onClose, DURATION);
+      this._timer = setTimeout(this._onClose, this.props.duration);
     }
   }, {
     key: 'componentWillUnmount',
@@ -102,6 +104,7 @@ var ToastContents = function (_Component) {
       this._timer = undefined;
       this.setState({ closing: true });
       if (onClose) {
+        // wait for the laeve animation to finish
         setTimeout(onClose, ANIMATION_DURATION);
       }
     }
@@ -115,34 +118,51 @@ var ToastContents = function (_Component) {
           children = _props.children,
           onClose = _props.onClose,
           size = _props.size,
-          status = _props.status;
+          status = _props.status,
+          rest = _objectWithoutProperties(_props, ['children', 'onClose', 'size', 'status']);
+
       var closing = this.state.closing;
 
+      // removing context props to avoid invalid html attributes on prop transfer
 
-      var classNames = (0, _classnames3.default)(CLASS_ROOT, (_classnames = {}, _defineProperty(_classnames, CLASS_ROOT + '--' + size, size), _defineProperty(_classnames, CLASS_ROOT + '--closing', closing), _classnames));
+      delete rest.duration;
+      delete rest.history;
+      delete rest.intl;
+      delete rest.router;
+      delete rest.store;
+
+      var classNames = (0, _classnames3.default)('grommet', CLASS_ROOT, (_classnames = {}, _defineProperty(_classnames, CLASS_ROOT + '--' + size, size), _defineProperty(_classnames, CLASS_ROOT + '--closing', closing), _classnames));
 
       var statusIcon = void 0;
       if (status) {
-        statusIcon = _react2.default.createElement(_Status2.default, { className: CLASS_ROOT + '__status', value: status,
-          size: size === 'large' ? 'medium' : size });
+        statusIcon = _react2.default.createElement(_Status2.default, {
+          className: CLASS_ROOT + '__status',
+          value: status,
+          size: size === 'large' ? 'medium' : size
+        });
       }
 
       var closeControl = void 0;
       if (onClose) {
-        closeControl = _react2.default.createElement(_Button2.default, { className: CLASS_ROOT + '__closer',
-          icon: _react2.default.createElement(_Close2.default, null), onClick: this._onClose });
+        closeControl = _react2.default.createElement(_Button2.default, {
+          className: CLASS_ROOT + '__closer',
+          icon: _react2.default.createElement(_Close2.default, null),
+          onClick: this._onClose
+        });
       }
 
       return _react2.default.createElement(
         'div',
-        { className: classNames },
+        _extends({ className: classNames }, rest),
         statusIcon,
         _react2.default.createElement(
           'div',
-          { ref: function ref(_ref) {
+          {
+            ref: function ref(_ref) {
               return _this2._contentsRef = _ref;
             },
-            className: CLASS_ROOT + '__contents' },
+            className: CLASS_ROOT + '__contents'
+          },
           children
         ),
         closeControl
@@ -228,22 +248,36 @@ var Toast = function (_Component2) {
   }, {
     key: '_renderLayer',
     value: function _renderLayer() {
+      var _this4 = this;
+
       if (this._element) {
         this._element.className = CLASS_ROOT + '__container';
         var contents = _react2.default.createElement(ToastContents, _extends({}, this.props, {
           history: this.context.history,
           intl: this.context.intl,
           router: this.context.router,
-          store: this.context.store }));
+          store: this.context.store,
+          onClose: function onClose() {
+            return _this4._removeLayer();
+          }
+        }));
         _reactDom2.default.render(contents, this._element);
       }
     }
   }, {
     key: '_removeLayer',
     value: function _removeLayer() {
-      _reactDom2.default.unmountComponentAtNode(this._element);
-      this._element.parentNode.removeChild(this._element);
-      this._element = undefined;
+      var onClose = this.props.onClose;
+
+      if (this._element) {
+        _reactDom2.default.unmountComponentAtNode(this._element);
+        this._element.parentNode.removeChild(this._element);
+        this._element = undefined;
+
+        if (onClose) {
+          onClose();
+        }
+      }
     }
   }, {
     key: 'render',
@@ -261,11 +295,13 @@ exports.default = Toast;
 
 Toast.propTypes = {
   onClose: _propTypes2.default.func,
+  duration: _propTypes2.default.number,
   size: _propTypes2.default.oneOf(['small', 'medium', 'large']),
   status: _propTypes2.default.string
 };
 
 Toast.defaultProps = {
+  duration: DURATION,
   size: 'medium'
 };
 module.exports = exports['default'];
