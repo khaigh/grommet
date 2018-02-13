@@ -124,61 +124,57 @@ module.exports = function(gulp) {
   });
 
   gulp.task('release:stable', ['release:createTmp'], (done) => {
-    if (process.env.CI) {
-      git.clone('https://' + process.env.GH_TOKEN + '@github.com/grommet/grommet.git',
-        {
-          cwd: './tmp/'
-        },
-        (err) => {
+    git.clone('https://github.com/khaigh/grommet.git',
+      {
+        cwd: './tmp/'
+      },
+      (err) => {
+        if (err) {
+          throw err;
+        }
+
+        process.chdir('./tmp/grommet');
+        git.checkout('stable', (err) => {
           if (err) {
             throw err;
           }
 
-          process.chdir('./tmp/grommet');
-          git.checkout('stable', (err) => {
-            if (err) {
-              throw err;
-            }
+          del.sync(['./**/*']);
 
-            del.sync(['./**/*']);
+          gulp.src('../../dist/**').pipe(gulp.dest('./')).on('end', () => {
+            git.status({
+              args: '--porcelain'
+            }, (err, stdout) => {
+              if (err) {
+                throw err;
+              }
 
-            gulp.src('../../dist/**').pipe(gulp.dest('./')).on('end', () => {
-              git.status({
-                args: '--porcelain'
-              }, (err, stdout) => {
-                if (err) {
-                  throw err;
-                }
+              if (stdout && stdout !== '') {
+                gulp.src('./')
+                  .pipe(git.add({
+                    args: '--all'
+                  }))
+                  .pipe(git.commit('Stable dev version update.')).on('end', () => {
+                    git.push('origin', 'stable', { quiet: true }, (err) => {
+                      if (err) {
+                        throw err;
+                      }
 
-                if (stdout && stdout !== '') {
-                  gulp.src('./')
-                    .pipe(git.add({
-                      args: '--all'
-                    }))
-                    .pipe(git.commit('Stable dev version update.')).on('end', () => {
-                      git.push('origin', 'stable', { quiet: true }, (err) => {
-                        if (err) {
-                          throw err;
-                        }
-
-                        process.chdir(__dirname);
-                        done();
-                      });
+                      process.chdir(__dirname);
+                      done();
                     });
-                } else {
-                  console.log('No difference since last commit, skipping stable release.');
+                  });
+              } else {
+                console.log('No difference since last commit, skipping stable release.');
 
-                  process.chdir(__dirname);
-                  done();
-                }
-              });
+                process.chdir(__dirname);
+                done();
+              }
             });
           });
-        }
-      );
-    } else {
-      console.warn('Skipping release. Release:stable task should be executed by CI only.');
-    }
+        });
+      }
+    );
   });
 
   gulp.task('release:clean', () => {
